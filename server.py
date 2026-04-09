@@ -7,9 +7,8 @@ import json
 import re
 import subprocess
 import sys
-import time
 from pathlib import Path
-from flask import Flask, request, jsonify, Response, stream_with_context
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -148,39 +147,21 @@ def ask():
     if len(question) > 2000:
         return jsonify({"error": "La pregunta es demasiado larga"}), 400
 
-    def generate():
-        try:
-            raw = query_notebooklm(question)
-            result = parse_response(raw)
+    try:
+        raw = query_notebooklm(question)
+        response = parse_response(raw)
 
-            if not result['citations']:
-                result['intro'] = raw[:800] if raw else "Consulta procesada."
-                result['citations'] = []
+        if not response['citations']:
+            # Si no se pudo parsear, devolver el texto crudo como intro
+            response['intro'] = raw[:800] if raw else "Consulta procesada. Verifica la conexión con NotebookLM."
+            response['citations'] = []
 
-            # 1. Enviar intro
-            yield f"data: {json.dumps({'type': 'intro', 'text': result['intro']}, ensure_ascii=False)}\n\n"
-            time.sleep(0.6)
+        return jsonify(response)
 
-            # 2. Enviar citas una por una con pausa reflexiva entre ellas
-            for i, citation in enumerate(result['citations']):
-                if i > 0:
-                    yield f"data: {json.dumps({'type': 'searching'}, ensure_ascii=False)}\n\n"
-                    time.sleep(2.2)
-                yield f"data: {json.dumps({'type': 'citation', 'data': citation}, ensure_ascii=False)}\n\n"
-                time.sleep(0.4)
-
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
-
-        except subprocess.TimeoutExpired:
-            yield f"data: {json.dumps({'type': 'error', 'message': 'La consulta tardó demasiado. Intenta de nuevo.'})}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-
-    return Response(
-        stream_with_context(generate()),
-        content_type='text/event-stream',
-        headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'}
-    )
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "La consulta tardó demasiado. Intenta de nuevo."}), 504
+    except Exception as e:
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
 
 @app.route('/health', methods=['GET'])
@@ -193,4 +174,4 @@ if __name__ == '__main__':
     print("  Sabiduría de los Libros Sagrados — Backend")
     print("  http://localhost:5000")
     print("=" * 60)
-    app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=5001, debug=False)

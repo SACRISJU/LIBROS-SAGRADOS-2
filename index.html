@@ -447,27 +447,6 @@
     background: var(--border);
   }
 
-  /* ── SEARCHING BUBBLE ── */
-  .searching-bubble {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    color: var(--gold-dim);
-    font-style: italic;
-    font-size: 0.9rem;
-    font-family: 'Cinzel', serif;
-    letter-spacing: 0.06em;
-    padding: 0.6rem 0.4rem;
-    animation: msg-in 0.3s ease both;
-  }
-
-  .search-spinner {
-    font-size: 1.1rem;
-    animation: spin 3s linear infinite;
-    display: inline-block;
-    color: var(--gold);
-  }
-
   /* ── ERROR ── */
   .error-msg {
     color: #c0785a;
@@ -517,7 +496,7 @@
       <span class="sym" title="Budismo">☸</span>
       <span class="sym" title="Hinduismo">🕉</span>
       <span class="sym" title="Zoroastrismo">🔥</span>
-      <span class="sym" title="Sijismo">☬</span>
+      <span class="sym" title="Sijismo">🪯</span>
       <span class="sym" title="Bahaísmo">✦</span>
       <span class="sym" title="Ortodoxia">☦</span>
       <span class="sym" title="Estrella de David">🔯</span>
@@ -591,7 +570,7 @@
 <script>
 // ── FLOATING PARTICLES ──
 (function spawnParticles() {
-  const symbols = ['✝','☪','✡','☯','☸','🕉','✞','☦','🔯','☬','✦','ॐ','☮','⛩','✴'];
+  const symbols = ['✝','☪','✡','☯','☸','🕉','✞','☦','🔯','🪯','✦','ॐ','☮','⛩','𓂀'];
   const canvas  = document.getElementById('bg-canvas');
   const count   = window.innerWidth < 600 ? 18 : 35;
 
@@ -699,14 +678,6 @@ function addDivider() {
   return d;
 }
 
-// ── SEARCHING BUBBLE ──
-function createSearchingBubble() {
-  const div = document.createElement('div');
-  div.className = 'searching-bubble';
-  div.innerHTML = `<span class="search-spinner">☸</span><span>Buscando en otro libro sagrado...</span>`;
-  return div;
-}
-
 // ── MAIN SEND FUNCTION ──
 async function sendMessage() {
   const input  = document.getElementById('user-input');
@@ -716,29 +687,19 @@ async function sendMessage() {
 
   if (!text) return;
 
+  // Reset input
   input.value = '';
   input.style.height = 'auto';
   btn.disabled = true;
 
+  // User bubble
   msgs.appendChild(createUserBubble(text));
   scrollToBottom();
 
+  // Loading
   const loader = createLoadingBubble();
   msgs.appendChild(loader);
   scrollToBottom();
-
-  let aiWrapper = null;
-  let searchingEl = null;
-
-  function getOrCreateWrapper() {
-    if (!aiWrapper) {
-      if (msgs.contains(loader)) msgs.removeChild(loader);
-      aiWrapper = document.createElement('div');
-      aiWrapper.className = 'msg-ai';
-      msgs.appendChild(aiWrapper);
-    }
-    return aiWrapper;
-  }
 
   try {
     const res = await fetch('http://localhost:5001/api/ask', {
@@ -747,99 +708,42 @@ async function sendMessage() {
       body: JSON.stringify({ question: text })
     });
 
+    msgs.removeChild(loader);
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let citationsTitleAdded = false;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep incomplete line
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        let evt;
-        try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-
-        if (evt.type === 'intro') {
-          const w = getOrCreateWrapper();
-          const intro = document.createElement('p');
-          intro.className = 'response-intro';
-          intro.textContent = evt.text;
-          w.appendChild(intro);
-          scrollToBottom();
-
-        } else if (evt.type === 'searching') {
-          const w = getOrCreateWrapper();
-          if (!citationsTitleAdded) {
-            const title = document.createElement('p');
-            title.className = 'citations-title';
-            title.textContent = '📖 Las Escrituras Responden';
-            w.appendChild(title);
-            citationsTitleAdded = true;
-          }
-          searchingEl = createSearchingBubble();
-          w.appendChild(searchingEl);
-          scrollToBottom();
-
-        } else if (evt.type === 'citation') {
-          const w = getOrCreateWrapper();
-          if (!citationsTitleAdded) {
-            const title = document.createElement('p');
-            title.className = 'citations-title';
-            title.textContent = '📖 Las Escrituras Responden';
-            w.appendChild(title);
-            citationsTitleAdded = true;
-          }
-          if (searchingEl && w.contains(searchingEl)) w.removeChild(searchingEl);
-          searchingEl = null;
-          const c = evt.data;
-          const card = document.createElement('div');
-          card.className = 'citation-card';
-          card.style.animation = 'msg-in 0.5s ease both';
-          card.innerHTML = `
-            <div class="citation-book">${c.book}</div>
-            <div class="citation-quote">${c.quote}</div>
-            <span class="citation-tag">${c.religion}</span>`;
-          w.appendChild(card);
-          scrollToBottom();
-
-        } else if (evt.type === 'done') {
-          if (msgs.contains(loader)) msgs.removeChild(loader);
-          msgs.appendChild(addDivider());
-          scrollToBottom();
-
-        } else if (evt.type === 'error') {
-          if (msgs.contains(loader)) msgs.removeChild(loader);
-          msgs.appendChild(createErrorBubble(evt.message));
-          msgs.appendChild(addDivider());
-          scrollToBottom();
-        }
-      }
-    }
+    const data = await res.json();
+    msgs.appendChild(createAIResponse(data));
 
   } catch (err) {
-    if (msgs.contains(loader)) msgs.removeChild(loader);
-    // Fallback sin backend
+    msgs.removeChild(loader);
+
+    // Fallback: show placeholder when no backend is connected
     const placeholder = {
-      intro: `Para recibir respuestas reales, asegúrate de que el servidor esté corriendo (python server.py). Aquí un ejemplo:`,
+      intro: `Tu pregunta sobre "${text}" ha sido recibida. Para recibir respuestas desde los libros sagrados, conecta el servidor backend al NotebookLM con tus libros sagrados. Mientras tanto, aquí tienes un ejemplo del formato de respuesta:`,
       citations: [
-        { book: 'Salmos 46:1', religion: 'Judaísmo · Biblia', quote: 'Dios es nuestro amparo y fortaleza, nuestro pronto auxilio en las tribulaciones.' },
-        { book: 'Corán, Sura 2:286', religion: 'Islam', quote: 'Dios no impone a nadie más de lo que puede soportar.' },
-        { book: 'Bhagavad Gita, Capítulo 2, Verso 14', religion: 'Hinduismo', quote: 'Las impresiones de los sentidos vienen y van; son impermanentes. Sopórtalas con paciencia.' }
+        {
+          book: 'Salmos 46:1',
+          religion: 'Judaísmo · Biblia',
+          quote: 'Dios es nuestro amparo y fortaleza, nuestro pronto auxilio en las tribulaciones.'
+        },
+        {
+          book: 'Corán, Sura 2:286',
+          religion: 'Islam',
+          quote: 'Dios no impone a nadie más de lo que puede soportar.'
+        },
+        {
+          book: 'Bhagavad Gita, Capítulo 2, Verso 14',
+          religion: 'Hinduismo',
+          quote: 'Las impresiones de los sentidos, oh Kunti, que producen frío y calor, placer y dolor, vienen y van; son impermanentes. Sopórtalas con paciencia.'
+        }
       ]
     };
     msgs.appendChild(createAIResponse(placeholder));
-    msgs.appendChild(addDivider());
-    scrollToBottom();
   }
 
+  msgs.appendChild(addDivider());
+  scrollToBottom();
   btn.disabled = false;
   input.focus();
 }
