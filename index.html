@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabiduría de los Libros Sagrados</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
+  :root {
+    --gold: #c9a84c;
+    --gold-bright: #f0c966;
+    --gold-dim: #7a5f22;
+    --bg: #0a0a0f;
+    --bg-card: #0f0f18;
+    --bg-input: #12121e;
+    --text: #e8e0d0;
+    --text-dim: #8a7f6a;
+    --border: rgba(201,168,76,0.2);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── BACKGROUND CANVAS ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    font-size: 2rem;
+    color: var(--gold);
+    opacity: 0;
+    animation: float-up linear infinite;
+    user-select: none;
+  }
+
+  @keyframes float-up {
+    0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.07; }
+    85%  { opacity: 0.05; }
+    100% { transform: translateY(-15vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* central radial glow */
+  #bg-canvas::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80vw; height: 80vh;
+    background: radial-gradient(ellipse at center,
+      rgba(201,168,76,0.04) 0%,
+      rgba(120,80,20,0.02) 40%,
+      transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 3.5rem 0 2rem;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    margin: 1.8rem auto 0;
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+
+  .crown-symbol {
+    font-size: 2.2rem;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.5rem;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 10px rgba(201,168,76,0.4), 0 0 30px rgba(201,168,76,0.1); }
+    50%       { text-shadow: 0 0 20px rgba(201,168,76,0.7), 0 0 60px rgba(201,168,76,0.25); }
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    font-weight: 900;
+    color: var(--gold-bright);
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+    text-shadow: 0 0 40px rgba(201,168,76,0.3);
+  }
+
+  .subtitle {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: clamp(1rem, 2.2vw, 1.35rem);
+    color: var(--text-dim);
+    margin-top: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── RELIGION SYMBOLS STRIP ── */
+  .symbol-strip {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(0.6rem, 2.5vw, 1.4rem);
+    margin-top: 1.8rem;
+    flex-wrap: wrap;
+  }
+
+  .sym {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    color: var(--gold);
+    opacity: 0.75;
+    transition: all 0.3s ease;
+    cursor: default;
+    animation: sym-breathe ease-in-out infinite;
+  }
+
+  .sym:hover {
+    opacity: 1;
+    transform: scale(1.3);
+    text-shadow: 0 0 20px var(--gold-bright);
+  }
+
+  @keyframes sym-breathe {
+    0%, 100% { opacity: 0.55; }
+    50%       { opacity: 0.85; }
+  }
+
+  .sym:nth-child(1)  { animation-duration: 3.1s; animation-delay: 0.0s; }
+  .sym:nth-child(2)  { animation-duration: 3.7s; animation-delay: 0.4s; }
+  .sym:nth-child(3)  { animation-duration: 2.9s; animation-delay: 0.8s; }
+  .sym:nth-child(4)  { animation-duration: 4.1s; animation-delay: 0.2s; }
+  .sym:nth-child(5)  { animation-duration: 3.4s; animation-delay: 1.0s; }
+  .sym:nth-child(6)  { animation-duration: 3.9s; animation-delay: 0.6s; }
+  .sym:nth-child(7)  { animation-duration: 2.8s; animation-delay: 1.2s; }
+  .sym:nth-child(8)  { animation-duration: 3.6s; animation-delay: 0.3s; }
+  .sym:nth-child(9)  { animation-duration: 4.2s; animation-delay: 0.9s; }
+  .sym:nth-child(10) { animation-duration: 3.3s; animation-delay: 0.5s; }
+  .sym:nth-child(11) { animation-duration: 3.8s; animation-delay: 1.1s; }
+
+  /* ── CHAT AREA ── */
+  #chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 1rem;
+  }
+
+  #messages {
+    flex: 1;
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* ── USER MESSAGE ── */
+  .msg-user {
+    align-self: flex-end;
+    max-width: 75%;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.07));
+    border: 1px solid var(--border);
+    border-radius: 18px 18px 4px 18px;
+    padding: 1rem 1.4rem;
+    font-style: italic;
+    color: var(--text);
+    position: relative;
+    animation: msg-in 0.4s ease both;
+  }
+
+  .msg-user::before {
+    content: '"';
+    font-family: 'Cinzel', serif;
+    font-size: 3rem;
+    color: var(--gold);
+    opacity: 0.25;
+    position: absolute;
+    top: -0.5rem; left: 0.6rem;
+    line-height: 1;
+  }
+
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── AI RESPONSE ── */
+  .msg-ai {
+    align-self: flex-start;
+    width: 100%;
+    animation: msg-in 0.5s ease both;
+  }
+
+  .response-intro {
+    font-style: italic;
+    color: var(--text);
+    font-size: 1.05rem;
+    margin-bottom: 1.4rem;
+    padding: 1rem 1.4rem;
+    border-left: 3px solid var(--gold-dim);
+    background: rgba(201,168,76,0.04);
+    border-radius: 0 8px 8px 0;
+    line-height: 1.8;
+  }
+
+  .citations-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .citations-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--gold-dim), transparent);
+  }
+
+  /* ── CITATION CARD ── */
+  .citation-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(201,168,76,0.12);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 0.85rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .citation-card:hover {
+    border-color: rgba(201,168,76,0.3);
+    border-left-color: var(--gold-bright);
+    box-shadow: 0 4px 24px rgba(201,168,76,0.08);
+  }
+
+  .citation-card::before {
+    content: '\201C';
+    position: absolute;
+    top: -0.3rem; right: 0.8rem;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 5rem;
+    color: var(--gold);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .citation-book {
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .citation-quote {
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--text);
+    line-height: 1.75;
+    position: relative;
+    padding-left: 0.3rem;
+  }
+
+  .citation-quote::before { content: '\201C'; }
+  .citation-quote::after  { content: '\201D'; }
+
+  .citation-tag {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.18rem 0.7rem;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+  }
+
+  /* ── LOADING ── */
+  .loading-msg {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--text-dim);
+    font-style: italic;
+    padding: 0.5rem 0;
+    animation: msg-in 0.3s ease both;
+  }
+
+  .loading-spinner {
+    font-size: 1.6rem;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* ── INPUT AREA ── */
+  #input-area {
+    padding: 1.5rem 0 2rem;
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent, var(--bg) 30%);
+    padding-top: 2rem;
+  }
+
+  .input-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    background: var(--bg-input);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: rgba(201,168,76,0.55);
+    box-shadow: 0 0 30px rgba(201,168,76,0.08);
+  }
+
+  #user-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    resize: none;
+    min-height: 48px;
+    max-height: 180px;
+  }
+
+  #user-input::placeholder {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  #send-btn {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #8a6010, var(--gold), #b8882a);
+    background-size: 200% 200%;
+    border: none;
+    border-radius: 10px;
+    color: #0a0a0f;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    animation: shimmer 4s ease infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  #send-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(201,168,76,0.35);
+  }
+
+  #send-btn:active { transform: translateY(0); }
+  #send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    font-family: 'Cinzel', serif;
+    text-transform: uppercase;
+    margin: 0.5rem 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── ERROR ── */
+  .error-msg {
+    color: #c0785a;
+    font-style: italic;
+    font-size: 0.95rem;
+    padding: 0.8rem 1.2rem;
+    border: 1px solid rgba(192,120,90,0.2);
+    border-radius: 8px;
+    background: rgba(192,120,90,0.05);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 1rem 0 1.5rem;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.08em;
+    opacity: 0.5;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .msg-user { max-width: 90%; }
+    h1 { font-size: 1.5rem; }
+    #send-btn { font-size: 0.65rem; padding: 0.65rem 0.9rem; }
+    .citation-card { padding: 0.9rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating background particles -->
+<div id="bg-canvas"></div>
+
+<div id="app">
+  <header>
+    <span class="crown-symbol">✦ ✦ ✦</span>
+    <h1>Di lo que te preocupa</h1>
+    <p class="subtitle">y te contestaré con la sabiduría de TODOS LOS LIBROS SAGRADOS</p>
+    <div class="symbol-strip">
+      <span class="sym" title="Judaísmo">✡</span>
+      <span class="sym" title="Islam">☪</span>
+      <span class="sym" title="Cristianismo">✝</span>
+      <span class="sym" title="Taoísmo">☯</span>
+      <span class="sym" title="Budismo">☸</span>
+      <span class="sym" title="Hinduismo">🕉</span>
+      <span class="sym" title="Zoroastrismo">🔥</span>
+      <span class="sym" title="Sijismo">🪯</span>
+      <span class="sym" title="Bahaísmo">✦</span>
+      <span class="sym" title="Ortodoxia">☦</span>
+      <span class="sym" title="Estrella de David">🔯</span>
+    </div>
+  </header>
+
+  <main id="chat-container">
+    <div id="messages">
+      <!-- Demo message pre-loaded -->
+      <div class="msg-user" style="animation-delay:0.1s">
+        Me siento solo y sin esperanza
+      </div>
+
+      <div class="msg-ai" style="animation-delay:0.3s">
+        <p class="response-intro">
+          La soledad y la pérdida de esperanza son experiencias profundamente humanas que todas las tradiciones espirituales han abordado con compasión. Los libros sagrados nos recuerdan que incluso en la oscuridad más profunda, existe una luz que nos guía.
+        </p>
+
+        <p class="citations-title">📖 Las Escrituras Responden</p>
+
+        <div class="citation-card">
+          <div class="citation-book">Salmos 34:18</div>
+          <div class="citation-quote">Cercano está el Señor a los quebrantados de corazón; y salva a los contritos de espíritu.</div>
+          <span class="citation-tag">Cristianismo · Biblia</span>
+        </div>
+
+        <div class="citation-card">
+          <div class="citation-book">Corán, Sura 94:5-6</div>
+          <div class="citation-quote">Ciertamente, tras la dificultad viene la facilidad. Ciertamente, tras la dificultad viene la facilidad.</div>
+          <span class="citation-tag">Islam</span>
+        </div>
+
+        <div class="citation-card">
+          <div class="citation-book">Bhagavad Gita, Capítulo 18, Verso 66</div>
+          <div class="citation-quote">Abandónate a Mí. Yo te libraré de todos los pecados. No te aflijas.</div>
+          <span class="citation-tag">Hinduismo</span>
+        </div>
+
+        <div class="citation-card">
+          <div class="citation-book">Dhammapada, Verso 1</div>
+          <div class="citation-quote">La mente es la precursora de todas las acciones. Si uno habla o actúa con una mente impura, el sufrimiento le sigue como la rueda al buey.</div>
+          <span class="citation-tag">Budismo</span>
+        </div>
+
+        <div class="citation-card">
+          <div class="citation-book">Tao Te Ching, Capítulo 16</div>
+          <div class="citation-quote">Regresa a la raíz y encontrarás la quietud. La quietud es el retorno al destino.</div>
+          <span class="citation-tag">Taoísmo</span>
+        </div>
+      </div>
+
+      <div class="divider">✦</div>
+    </div>
+  </main>
+
+  <div id="input-area">
+    <div class="input-wrapper">
+      <textarea
+        id="user-input"
+        placeholder="Escribe lo que te preocupa o tu pregunta..."
+        rows="2"
+        onkeydown="handleKey(event)"
+      ></textarea>
+      <button id="send-btn" onclick="sendMessage()">Consultar la Sabiduría</button>
+    </div>
+  </div>
+
+  <footer>Toda la sabiduría pertenece a sus respectivas tradiciones sagradas &nbsp;·&nbsp; ✦</footer>
+</div>
+
+<script>
+// ── FLOATING PARTICLES ──
+(function spawnParticles() {
+  const symbols = ['✝','☪','✡','☯','☸','🕉','✞','☦','🔯','🪯','✦','ॐ','☮','⛩','𓂀'];
+  const canvas  = document.getElementById('bg-canvas');
+  const count   = window.innerWidth < 600 ? 18 : 35;
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('span');
+    el.className = 'particle';
+    el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    el.style.cssText = `
+      left: ${Math.random() * 100}%;
+      font-size: ${0.8 + Math.random() * 2}rem;
+      animation-duration: ${18 + Math.random() * 30}s;
+      animation-delay: ${-Math.random() * 30}s;
+      opacity: 0;
+    `;
+    canvas.appendChild(el);
+  }
+})();
+
+// ── AUTO-RESIZE TEXTAREA ──
+const textarea = document.getElementById('user-input');
+textarea.addEventListener('input', () => {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 180) + 'px';
+});
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ── RENDER HELPERS ──
+function createUserBubble(text) {
+  const div = document.createElement('div');
+  div.className = 'msg-user';
+  div.textContent = text;
+  return div;
+}
+
+function createLoadingBubble() {
+  const div = document.createElement('div');
+  div.className = 'loading-msg';
+  div.innerHTML = `<span class="loading-spinner">✦</span><span>Consultando los libros sagrados...</span>`;
+  return div;
+}
+
+function createAIResponse(data) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-ai';
+
+  // Intro
+  const intro = document.createElement('p');
+  intro.className = 'response-intro';
+  intro.textContent = data.intro;
+  wrapper.appendChild(intro);
+
+  // Citations title
+  const title = document.createElement('p');
+  title.className = 'citations-title';
+  title.textContent = '📖 Las Escrituras Responden';
+  wrapper.appendChild(title);
+
+  // Citation cards
+  (data.citations || []).forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'citation-card';
+
+    const book = document.createElement('div');
+    book.className = 'citation-book';
+    book.textContent = c.book;
+
+    const quote = document.createElement('div');
+    quote.className = 'citation-quote';
+    quote.textContent = c.quote;
+
+    const tag = document.createElement('span');
+    tag.className = 'citation-tag';
+    tag.textContent = c.religion;
+
+    card.appendChild(book);
+    card.appendChild(quote);
+    card.appendChild(tag);
+    wrapper.appendChild(card);
+  });
+
+  return wrapper;
+}
+
+function createErrorBubble(msg) {
+  const div = document.createElement('div');
+  div.className = 'msg-ai';
+  div.innerHTML = `<p class="error-msg">${msg}</p>`;
+  return div;
+}
+
+function scrollToBottom() {
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+function addDivider() {
+  const d = document.createElement('div');
+  d.className = 'divider';
+  d.textContent = '✦';
+  return d;
+}
+
+// ── MAIN SEND FUNCTION ──
+async function sendMessage() {
+  const input  = document.getElementById('user-input');
+  const btn    = document.getElementById('send-btn');
+  const msgs   = document.getElementById('messages');
+  const text   = input.value.trim();
+
+  if (!text) return;
+
+  // Reset input
+  input.value = '';
+  input.style.height = 'auto';
+  btn.disabled = true;
+
+  // User bubble
+  msgs.appendChild(createUserBubble(text));
+  scrollToBottom();
+
+  // Loading
+  const loader = createLoadingBubble();
+  msgs.appendChild(loader);
+  scrollToBottom();
+
+  try {
+    const res = await fetch('http://localhost:5001/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text })
+    });
+
+    msgs.removeChild(loader);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    msgs.appendChild(createAIResponse(data));
+
+  } catch (err) {
+    msgs.removeChild(loader);
+
+    // Fallback: show placeholder when no backend is connected
+    const placeholder = {
+      intro: `Tu pregunta sobre "${text}" ha sido recibida. Para recibir respuestas desde los libros sagrados, conecta el servidor backend al NotebookLM con tus libros sagrados. Mientras tanto, aquí tienes un ejemplo del formato de respuesta:`,
+      citations: [
+        {
+          book: 'Salmos 46:1',
+          religion: 'Judaísmo · Biblia',
+          quote: 'Dios es nuestro amparo y fortaleza, nuestro pronto auxilio en las tribulaciones.'
+        },
+        {
+          book: 'Corán, Sura 2:286',
+          religion: 'Islam',
+          quote: 'Dios no impone a nadie más de lo que puede soportar.'
+        },
+        {
+          book: 'Bhagavad Gita, Capítulo 2, Verso 14',
+          religion: 'Hinduismo',
+          quote: 'Las impresiones de los sentidos, oh Kunti, que producen frío y calor, placer y dolor, vienen y van; son impermanentes. Sopórtalas con paciencia.'
+        }
+      ]
+    };
+    msgs.appendChild(createAIResponse(placeholder));
+  }
+
+  msgs.appendChild(addDivider());
+  scrollToBottom();
+  btn.disabled = false;
+  input.focus();
+}
+</script>
+</body>
+</html>
