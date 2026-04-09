@@ -18,25 +18,49 @@ NOTEBOOKLM_SKILL = Path(r"C:\Users\juans\.claude\skills\notebooklm")
 NOTEBOOK_URL = "https://notebooklm.google.com/notebook/49176ae3-3a4a-4234-87b6-4ff8feda5b5a"
 VENV_PYTHON = NOTEBOOKLM_SKILL / ".venv" / "Scripts" / "python.exe"
 
-PROMPT_TEMPLATE = """Responde en español a: {question}
+PROMPT_TEMPLATE = """El usuario pregunta: "{question}"
 
-Usa EXACTAMENTE este formato, sin añadir nada más:
+Busca en las fuentes citas que hablen DIRECTAMENTE sobre "{keywords}". Cada cita debe estar relacionada específicamente con ese tema — no citas genéricas sobre fe o Dios.
 
-INTRO: [2-3 frases de introducción compasiva en español]
+Usa EXACTAMENTE este formato:
 
-LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta]"
-LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta]"
-LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta]"
-LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta]"
-LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta]"
+INTRO: [2-3 frases de introducción en español sobre "{keywords}" específicamente]
 
-Reglas: mínimo 3 citas, máximo 10, de distintas tradiciones (Biblia, Corán, Bhagavad Gita, Tao Te Ching, Tripitaka, Guru Granth Sahib, Talmud, Avesta, etc.). Todo en español."""
+LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta sobre {keywords}]"
+LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta sobre {keywords}]"
+LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta sobre {keywords}]"
+LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta sobre {keywords}]"
+LIBRO: [libro sagrado, capítulo y verso] | RELIGION: [tradición] | TEXTO: "[cita textual exacta sobre {keywords}]"
+
+Reglas CRÍTICAS:
+- Cada cita debe mencionar directamente "{keywords}" o un concepto equivalente en esa tradición
+- Si no encuentras citas directas sobre "{keywords}" en alguna tradición, omítela y busca en otra
+- Mínimo 3 citas, máximo 10, de distintas tradiciones (Biblia, Corán, Bhagavad Gita, Tao Te Ching, Tripitaka, Guru Granth Sahib, Talmud, Avesta, etc.)
+- Todo en español"""
+
+
+def extract_keywords(question: str) -> str:
+    """Extrae las palabras clave principales de la pregunta."""
+    # Eliminar palabras vacías en español
+    stopwords = {
+        'el','la','los','las','un','una','unos','unas','de','del','a','al',
+        'en','con','por','para','que','es','se','me','te','le','nos','mi',
+        'tu','su','yo','tú','él','ella','esto','eso','como','muy','más',
+        'pero','y','o','si','no','lo','hay','tengo','siento','estoy',
+        'quiero','necesito','puedo','debo','sobre','acerca','qué','cómo',
+        'por','qué','cuál','cuáles','cuándo','dónde','quién'
+    }
+    words = re.findall(r'\b\w{3,}\b', question.lower())
+    keywords = [w for w in words if w not in stopwords]
+    # Si no quedó nada útil, usar las primeras palabras de la pregunta
+    return ', '.join(keywords[:4]) if keywords else question[:50]
 
 
 def query_notebooklm(question: str) -> str:
     """Llama al script de NotebookLM y devuelve la respuesta en texto plano."""
     import os
-    prompt = PROMPT_TEMPLATE.format(question=question)
+    keywords = extract_keywords(question)
+    prompt = PROMPT_TEMPLATE.format(question=question, keywords=keywords)
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
